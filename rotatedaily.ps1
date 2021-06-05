@@ -20,7 +20,7 @@
 
 ########################################################################
 # 対象ファイルを日次ローテーション(切替えおよび削除)する。
-function rotatedaily([datetime]$now, [uint32]$backup, [string]$filename, [string]$suffix) {
+function rotatedaily([datetime]$dtm, [uint32]$backup, [string]$filename, [string]$suffix) {
 
     # [実装メモ]
     # (1) 対象ファイルの更新日付が現在日付と異なる場合、過去ファイルへの切替えを実施する。
@@ -36,7 +36,7 @@ function rotatedaily([datetime]$now, [uint32]$backup, [string]$filename, [string
     $fname = "${filename}${suffix}"
     if (Test-Path -Path $fname) {
         $ftime = $(Get-Item -Path $fname).LastWriteTime
-        if ($ftime.Date -ne $now.Date) {
+        if ($ftime.Date -ne $dtm.Date) {
             $newname = "${filename}${delim}$($ftime.ToString($dtfmt))${suffix}"
             if (Test-Path -Path $newname) {
                 Remove-Item -Path $newname -ErrorAction Stop
@@ -54,7 +54,7 @@ function rotatedaily([datetime]$now, [uint32]$backup, [string]$filename, [string
     New-Item -ItemType File -Path $fname -ErrorAction Stop > $null
 
     # (4) 保持期間を超えた過去ファイルを削除する。
-    $threshold = $now.AddDays(- $backup).ToString($dtfmt)
+    $threshold = $dtm.AddDays(- $backup).ToString($dtfmt)
     Get-Item -Path "${filename}${delim}*${suffix}" | ForEach-Object {
         if ($_.Name.Length -ne $filename.Length + $delim.Length + $dtfmt.Length + $suffix.Length) {
             return
